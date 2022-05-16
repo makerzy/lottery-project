@@ -18,10 +18,10 @@ contract Lottery is Ownable {
 
     string public constant name = "Simple Lottery With On-chain Randomness";
 
-    // loteryId => winningNumber => addresses of users
+    // lotteryId => winningNumber => addresses of users
     mapping(uint256 => mapping(uint256 => address[])) public potentialWinners;
     mapping(uint256 => bytes32) private initBytes;
-    mapping(address => bool) public entered;
+    mapping(address =>mapping(uint256 => bool)) public entered;
     mapping(uint256 => bool) public initialized;
     mapping(uint256 => bool) public ended;
     mapping(uint256 => uint256) public lotteryPool;
@@ -52,8 +52,8 @@ contract Lottery is Ownable {
     function enterLottery(uint256 lotteryId, uint256[] calldata winningNums)
         external
     {
-        require(!entered[_msgSender()] && !ended[lotteryId], "entered");
-        entered[_msgSender()] = true;
+        require(!entered[_msgSender()][lotteryId] && !ended[lotteryId], "entered");
+        entered[_msgSender()][lotteryId] = true;
         uint256 len = winningNums.length;
         uint256 reqValue = len * entryFees;
         token.safeTransferFrom(_msgSender(), address(this), reqValue);
@@ -99,7 +99,6 @@ contract Lottery is Ownable {
         if(winners.length ==0) return;
         lotteryValue = lotteryValue % winners.length;
         _winner = winners[lotteryValue];
-        
         winner[lotteryId] = _winner;
         uint256 pool = lotteryPool[lotteryId];
         token.safeTransfer(_winner, pool);
