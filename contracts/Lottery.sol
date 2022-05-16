@@ -89,20 +89,21 @@ contract Lottery is Ownable {
         return keccak256(abi.encode(initBytes[id], block.difficulty, bytesVal));
     }
 
-    function pickWinner(uint256 lotteryId) external {
+    function pickWinner(uint256 lotteryId) external returns(address){
         onlyOwner();
         require(!ended[lotteryId], "replay");
         ended[lotteryId] = true;
         address _winner;
         uint256 lotteryValue = uint256(random(initBytes[lotteryId]));
         address[] memory winners = potentialWinners[lotteryId][lotteryValue];
-        if(winners.length ==0) return;
+        if(winners.length ==0) return address(0);
         lotteryValue = lotteryValue % winners.length;
         _winner = winners[lotteryValue];
         winner[lotteryId] = _winner;
         uint256 pool = lotteryPool[lotteryId];
         token.safeTransfer(_winner, pool);
         emit WinnerPicked(lotteryId, _winner, lotteryValue, pool);
+        return _winner;
     }
 
     // Withdraw locked token to owner account
